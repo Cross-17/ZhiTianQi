@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import CoreLocation
 class SearchTableViewController: UITableViewController {
     let client = WeatherClient.shared
     let delegate = UIApplication.shared.delegate as! AppDelegate
@@ -122,10 +123,27 @@ extension SearchTableViewController: NSFetchedResultsControllerDelegate {
 
 extension SearchTableViewController: UISearchBarDelegate{
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        let stack = delegate.stack
-        let city = City(searchBar.text!,(stack?.context)!)
-        city.lastViewedAt = NSDate()
-        self.dismiss(animated: true, completion: nil)
+        
+        let geo = CLGeocoder()
+        geo.geocodeAddressString(searchBar.text!){ (result,error) in
+            if  error != nil{
+                self.alertWithError("Could not find city \(searchBar.text)", "ERROR")
+            }else{
+                let coor = result![0].location?.coordinate
+                let city = City(searchBar.text!,(self.delegate.stack?.context)!)
+                let lat = coor?.latitude
+                let lon = coor?.longitude
+                city.location = "\(lat!),\(lon!)"
+                city.lastViewedAt = NSDate()
+                self.navigationController?.popToRootViewController(animated: true)
+            }
+    }
+}
+    
+    func alertWithError(_ error: String,_ title: String) {
+        let alertView = UIAlertController(title: title, message: error, preferredStyle: .alert)
+        alertView.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+        self.present(alertView, animated: true, completion: nil)
     }
 }
 

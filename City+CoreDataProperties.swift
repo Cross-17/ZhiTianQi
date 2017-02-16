@@ -19,6 +19,7 @@ extension City {
     @NSManaged public var name: String?
     @NSManaged public var updatedAt: NSDate?
     @NSManaged public var lastViewedAt: NSDate?
+    @NSManaged public var location: String?
     @NSManaged public var weather: NSOrderedSet?
 
 }

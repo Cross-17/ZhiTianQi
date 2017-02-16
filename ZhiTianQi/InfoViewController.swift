@@ -54,6 +54,7 @@ class InfoViewController: UIViewController {
     }
 }
     
+    @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var tempScaleLabel: UILabel!
     @IBOutlet weak var todayLabel: UILabel!
@@ -97,7 +98,12 @@ extension InfoViewController{
     
     func downloadData(_ handler: @escaping () -> Void){
         let stack = delegate.stack
-        client.queryWithCityName((self.city?.name!)!){(data,error) in
+        let name = self.city?.name!
+        var searchString = "CN/\(name!)"
+        if (self.city?.location) != nil{
+            searchString = (self.city?.location!)!
+        }
+        client.queryWithCityName(searchString){(data,error) in
             if let data = data as! NSData? {
                 self.wdata  = Wdata(context:(stack?.context)!)
                 self.wdata?.data = data
@@ -106,10 +112,9 @@ extension InfoViewController{
                 stack?.save()
                 self.client.parseData((self.wdata?.data)! as Data){ (dict,error) in
                 self.parsedDict = dict as! [String : Any]
-                print("download finished")
                 }
             }else{
-                self.alertWithError("Network Fail","Error")
+                self.alertWithError(error!,"Error")
             }
             handler()
     }
@@ -259,6 +264,7 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
             todayLabel.alpha = alpha
             tempScaleLabel.alpha = alpha
         }
+        
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {

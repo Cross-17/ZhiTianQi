@@ -14,27 +14,28 @@ class WeatherClient {
     let key = "07efc3b0e455ddeb"
     let apiKey = "113cae959b360a77cae56537dc57c4ae"
     
-    func queryWithCityName(_ name:String, completionHandler:@escaping (_ result: AnyObject?, _ error: NSError?) -> Void){
+    func queryWithCityName(_ name:String, completionHandler:@escaping (_ result: AnyObject?, _ error: String?) -> Void){
         let base = "api.wunderground.com/api/07efc3b0e455ddeb/forecast10day/conditions/astronomy/hourly"
-        let query = "q/CN/\(name).json"
+        let query = "q/\(name).json"
         let url = "https://\(base)/\(query)"
         requestWithURL(url,completionHandler)
     }
     
-    private func requestWithURL(_ url:String,_ completionHandler:@escaping (_ result: AnyObject?, _ error: NSError?) -> Void){
+    private func requestWithURL(_ url:String,_ completionHandler:@escaping (_ result: AnyObject?, _ error: String?) -> Void){
         let request = URLRequest(url: NSURL(string:url) as! URL)
         let task = session.dataTask(with: request){ data, response, error in
             
             guard (error == nil) else {
-                print("There was an error with your request: \(error)")
+                completionHandler(nil,"There was an error with your request: \(error)")
                 return
             }
             guard let statusCode = (response as? HTTPURLResponse)?.statusCode, statusCode >= 200 && statusCode <= 299 else {
-                print("Your request returned a status code other than 2xx!")
+                 let statusCode = (response as? HTTPURLResponse)?.statusCode
+                completionHandler(nil,"Your request returned a status code other than 2xx!\(statusCode)")
                 return
             }
             guard let data = data else {
-                print("No data was returned by the request!")
+               completionHandler(nil,"No data was returned by the request!")
                 return
             }
             completionHandler(data as AnyObject?,nil)
