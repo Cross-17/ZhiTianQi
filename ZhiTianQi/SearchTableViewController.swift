@@ -77,7 +77,7 @@ extension SearchTableViewController{
        let city = fetchedResultsController?.object(at: indexPath) as! City
        city.lastViewedAt = NSDate()
        delegate.stack?.save()
-       self.dismiss(animated: true, completion: nil)
+       navigationController?.popToRootViewController(animated: true)
     }
 }
 

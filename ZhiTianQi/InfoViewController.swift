@@ -23,14 +23,17 @@ class InfoViewController: UIViewController {
     var tenDayForecast : [[String:Any]] = []
     var hourlyData : [[String:Any]] = []
     var currentDetail :[String:Any] = [:]
+    var uiEnableFlag = false
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
+        configureUI(false)
         let stack = delegate.stack
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
         let results = try! stack?.context.fetch(fetchRequest)
         city = results?[0] as! City?
+        city?.lastViewedAt = NSDate()
         cityCenter = cityName.center.y
         weatherCenter = weatherLabel.center.y
         tableView.separatorStyle = .none
@@ -42,13 +45,16 @@ class InfoViewController: UIViewController {
                 stack?.context.delete(self.city!)
             }else{
             DispatchQueue.main.async {
+            self.configureUI(true)
             self.collectionView.reloadData()
             self.tableView.reloadData()
+                
             }
         }
     }
 }
     
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var tempScaleLabel: UILabel!
     @IBOutlet weak var todayLabel: UILabel!
     @IBOutlet weak var tempLabel: UILabel!
@@ -92,14 +98,18 @@ extension InfoViewController{
     func downloadData(_ handler: @escaping () -> Void){
         let stack = delegate.stack
         client.queryWithCityName((self.city?.name!)!){(data,error) in
+            if let data = data as! NSData? {
                 self.wdata  = Wdata(context:(stack?.context)!)
-                self.wdata?.data = data as! NSData?
+                self.wdata?.data = data
                 self.wdata?.city = self.city
                 self.city?.updatedAt = NSDate()
                 stack?.save()
                 self.client.parseData((self.wdata?.data)! as Data){ (dict,error) in
                 self.parsedDict = dict as! [String : Any]
                 print("download finished")
+                }
+            }else{
+                self.alertWithError("Network Fail","Error")
             }
             handler()
     }
@@ -124,8 +134,6 @@ extension InfoViewController{
             }
             tenDayForecast.append(tempDict)
         }
-        
-        configureCurrentCondition(parsedDict)
     }
     
     func configureHourly(_ hourly:[[String:Any]]){
@@ -161,11 +169,11 @@ extension InfoViewController{
         
         let current = dict["current_observation"] as! [String:Any]
         let sunPhase = dict["sun_phase"] as! [String:Any]
+        let sunrise = sunPhase["sunrise"] as! [String:Any]
+        let sunset = sunPhase["sunset"] as! [String:Any]
         tempLabel.text = "\(current["feelslike_c"]!)°"
         weatherLabel.text = current["weather"] as! String?
-        let sunrise = sunPhase["sunrise"] as! [String:Any]
         currentDetail["Sunrise"] = "\(sunrise["hour"]!):\(sunrise["minute"]!)"
-        let sunset = sunPhase["sunset"] as! [String:Any]
         currentDetail["Sunset"] = "\(sunset["hour"]!):\(sunset["minute"]!)"
         currentDetail["Humidity"] = current["relative_humidity"]!
         currentDetail["Wind"] = "\(current["wind_dir"]!) \(current["wind_mph"]!) mph"
@@ -190,17 +198,38 @@ extension InfoViewController{
         alertView.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
         self.present(alertView, animated: true, completion: nil)
     }
+    
+    func configureUI(_ bool:Bool){
+        if bool{
+              tenDayForecast = []
+              hourlyData = []
+              configureForecast(parsedDict["forecast"] as! [String : Any])
+              configureHourly(parsedDict["hourly_forecast"] as! [[String : Any]])
+              configureCurrentCondition(parsedDict)
+              activityIndicator.stopAnimating()
+              uiEnableFlag = true
+        }else{
+            uiEnableFlag = false
+            cityName.text = ""
+            todayLabel.text = ""
+            tempScaleLabel.text = ""
+            tempLabel.text = "_ _"
+            weatherLabel.text = ""
+            activityIndicator.startAnimating()
+        }
+        collectionView.reloadData()
+        tableView.reloadData()
+    }
 }
 
 extension InfoViewController: UICollectionViewDataSource{
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
     {
-        if wdata == nil{
+        if !uiEnableFlag{
         return 0
         }else{
-            configureHourly(parsedDict["hourly_forecast"] as! [[String : Any]])
-            return 26
+            return 24
         }
     }
     
@@ -272,11 +301,10 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
     
     }
     func numberOfSections(in tableView: UITableView) -> Int{
-        if wdata == nil{
+        if !uiEnableFlag{
             return 0
         }else
         {
-        configureForecast(parsedDict["forecast"] as! [String : Any])
         return 3
         }
     }
