@@ -13,6 +13,8 @@ class SearchTableViewController: UITableViewController {
     let client = WeatherClient.shared
     let delegate = UIApplication.shared.delegate as! AppDelegate
     
+    @IBOutlet weak var searchBar: UISearchBar!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         searchBar.delegate = self
@@ -21,8 +23,6 @@ class SearchTableViewController: UITableViewController {
         fr.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
         fetchedResultsController = NSFetchedResultsController(fetchRequest: fr, managedObjectContext: (stack?.context)!, sectionNameKeyPath: nil, cacheName: nil)
     }
-    
-    @IBOutlet weak var searchBar: UISearchBar!
     
     var fetchedResultsController : NSFetchedResultsController<NSFetchRequestResult>? {
         didSet {
@@ -127,7 +127,7 @@ extension SearchTableViewController: UISearchBarDelegate{
         let geo = CLGeocoder()
         geo.geocodeAddressString(searchBar.text!){ (result,error) in
             if  error != nil{
-                self.alertWithError("Could not find city \(searchBar.text)", "ERROR")
+                self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
             }else{
                 let coor = result![0].location?.coordinate
                 let city = City(searchBar.text!,(self.delegate.stack?.context)!)
@@ -139,7 +139,9 @@ extension SearchTableViewController: UISearchBarDelegate{
             }
     }
 }
-    
+}
+
+extension UIViewController{
     func alertWithError(_ error: String,_ title: String) {
         let alertView = UIAlertController(title: title, message: error, preferredStyle: .alert)
         alertView.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))

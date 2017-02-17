@@ -25,34 +25,6 @@ class InfoViewController: UIViewController {
     var currentDetail :[String:Any] = [:]
     var uiEnableFlag = false
     
-    override func viewWillAppear(_ animated: Bool) {
-        super.viewWillAppear(animated)
-        configureUI(false)
-        let stack = delegate.stack
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
-        let results = try! stack?.context.fetch(fetchRequest)
-        city = results?[0] as! City?
-        city?.lastViewedAt = NSDate()
-        cityCenter = cityName.center.y
-        weatherCenter = weatherLabel.center.y
-        tableView.separatorStyle = .none
-        self.loadWeatherData(){
-            let response =  self.parsedDict["response"] as! [String:Any]
-            if response["error"] != nil{
-                let name = self.city?.name
-                self.alertWithError("Could not find data with \(name!)","Error")
-                stack?.context.delete(self.city!)
-            }else{
-            DispatchQueue.main.async {
-            self.configureUI(true)
-            self.collectionView.reloadData()
-            self.tableView.reloadData()
-                
-            }
-        }
-    }
-}
     
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
@@ -64,6 +36,38 @@ class InfoViewController: UIViewController {
     @IBOutlet weak var cityName: UILabel!
     @IBOutlet weak var currentView: UIView!
     @IBOutlet weak var collectionView: UICollectionView!
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        DispatchQueue.main.async {
+            self.configureUI(false)
+            self.collectionView.reloadData()
+            self.tableView.reloadData()
+        }
+        let stack = delegate.stack
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
+        let results = try! stack?.context.fetch(fetchRequest)
+        city = results?[0] as! City?
+        city?.lastViewedAt = NSDate()
+        cityCenter = cityName.center.y
+        weatherCenter = weatherLabel.center.y
+        tableView.separatorStyle = .none
+        self.loadWeatherData(){
+            let response =  self.parsedDict["response"] as! [String:Any]?
+            if response == nil || response?["error"] != nil {
+                let name = self.city?.name
+                self.alertWithError("Could not find data with \(name!)","Error")
+                stack?.context.delete(self.city!)
+            }else{
+            DispatchQueue.main.async {
+            self.configureUI(true)
+            self.collectionView.reloadData()
+            self.tableView.reloadData()
+            }
+        }
+      }
+   }
 }
 
 extension InfoViewController{
@@ -114,7 +118,7 @@ extension InfoViewController{
                 self.parsedDict = dict as! [String : Any]
                 }
             }else{
-                self.alertWithError(error!,"Error")
+                self.alertWithError("Network Fail","Error")
             }
             handler()
     }
@@ -135,7 +139,13 @@ extension InfoViewController{
             tempDict["Weather"] = item["conditions"]
             
             if let high = item["high"] as! [String:Any]?, let low = item["low"] as! [String:Any]?{
+                let highCelsius = high["celsius"]! as! String
+                if highCelsius.characters.count == 2{
+                tempDict["Temp"] = "\(low["celsius"]!)   \(high["celsius"]!)"
+                }else{
                 tempDict["Temp"] = "\(low["celsius"]!)    \(high["celsius"]!)"
+
+                }
             }
             tenDayForecast.append(tempDict)
         }
@@ -198,33 +208,26 @@ extension InfoViewController{
         return result
     }
     
-    func alertWithError(_ error: String,_ title: String) {
-        let alertView = UIAlertController(title: title, message: error, preferredStyle: .alert)
-        alertView.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
-        self.present(alertView, animated: true, completion: nil)
-    }
-    
     func configureUI(_ bool:Bool){
         if bool{
-              tenDayForecast = []
-              hourlyData = []
-              configureForecast(parsedDict["forecast"] as! [String : Any])
-              configureHourly(parsedDict["hourly_forecast"] as! [[String : Any]])
-              configureCurrentCondition(parsedDict)
-              activityIndicator.stopAnimating()
-              uiEnableFlag = true
+              self.tenDayForecast = []
+              self.hourlyData = []
+              self.configureForecast(self.parsedDict["forecast"] as! [String : Any])
+              self.configureHourly(self.parsedDict["hourly_forecast"] as! [[String : Any]])
+              self.configureCurrentCondition(self.parsedDict)
+              self.activityIndicator.stopAnimating()
+              self.uiEnableFlag = true
         }else{
-            uiEnableFlag = false
-            cityName.text = ""
-            todayLabel.text = ""
-            tempScaleLabel.text = ""
-            tempLabel.text = "_ _"
-            weatherLabel.text = ""
-            activityIndicator.startAnimating()
+            self.uiEnableFlag = false
+            self.cityName.text = ""
+            self.todayLabel.text = ""
+            self.tempScaleLabel.text = ""
+            self.tempLabel.text = "_ _"
+            self.weatherLabel.text = ""
+            self.activityIndicator.startAnimating()
         }
-        collectionView.reloadData()
-        tableView.reloadData()
-    }
+        }
+    
 }
 
 extension InfoViewController: UICollectionViewDataSource{
@@ -292,7 +295,7 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
     }
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat{
         if indexPath.section == 2{
-            return 360.0
+            return 500.0
         }else{
             return 60.0
         }
