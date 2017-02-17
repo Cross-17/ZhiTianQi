@@ -73,7 +73,6 @@
 			children = (
 				602DBEA61E4B68C200D3655D /* Model.xcdatamodeld */,
 				602DBEA01E4B0EF300D3655D /* City.swift */,
-				602DBE9E1E4A516800D3655D /* GCDBlackBox.swift */,
 				602DBEB11E4C634800D3655D /* CoreDataStack.swift */,
 				602ADE451E51CEC000521C47 /* Wdata+CoreDataProperties.swift */,
 				602DBEA91E4B6C3000D3655D /* City+CoreDataClass.swift */,
@@ -114,6 +113,7 @@
 			children = (
 				602DBE8A1E4A385100D3655D /* AppDelegate.swift */,
 				602DBE8E1E4A385100D3655D /* Main.storyboard */,
+				602DBE9E1E4A516800D3655D /* GCDBlackBox.swift */,
 				602DBE911E4A385100D3655D /* Assets.xcassets */,
 				602DBE931E4A385100D3655D /* LaunchScreen.storyboard */,
 				602DBE961E4A385100D3655D /* Info.plist */,

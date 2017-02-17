@@ -126,8 +126,12 @@ extension SearchTableViewController: UISearchBarDelegate{
         
         let geo = CLGeocoder()
         geo.geocodeAddressString(searchBar.text!){ (result,error) in
-            if  error != nil{
+            if  let error = error{
+                if error.localizedDescription.contains("8"){
                 self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
+                }else{
+                    self.alertWithError("Network Fail", "ERROR")
+                }
             }else{
                 let coor = result![0].location?.coordinate
                 let city = City(searchBar.text!,(self.delegate.stack?.context)!)

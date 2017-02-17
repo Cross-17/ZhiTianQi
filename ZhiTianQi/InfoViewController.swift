@@ -59,6 +59,9 @@ class InfoViewController: UIViewController {
                 let name = self.city?.name
                 self.alertWithError("Could not find data with \(name!)","Error")
                 stack?.context.delete(self.city!)
+                performUIUpdatesOnMain {
+                    self.activityIndicator.isHidden = true
+                }
             }else{
             DispatchQueue.main.async {
             self.configureUI(true)
@@ -119,6 +122,9 @@ extension InfoViewController{
                 }
             }else{
                 self.alertWithError("Network Fail","Error")
+                performUIUpdatesOnMain {
+                    self.activityIndicator.isHidden = true
+                }
             }
             handler()
     }
