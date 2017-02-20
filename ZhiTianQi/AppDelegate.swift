@@ -15,8 +15,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     let stack = CoreDataStack(modelName: "Model")
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-//        try! stack?.dropAllData()
-//        stack?.context.reset()
+        // make sure we always have City object while this app running
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
         if try! stack?.context.count(for: fetchRequest) == 0{
         for item in city.data{

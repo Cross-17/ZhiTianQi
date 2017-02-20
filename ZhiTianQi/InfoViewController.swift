@@ -49,6 +49,9 @@ class InfoViewController: UIViewController {
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
         let results = try! stack?.context.fetch(fetchRequest)
         city = results?[0] as! City?
+        guard city != nil else{
+            return
+        }
         city?.lastViewedAt = NSDate()
         cityCenter = cityName.center.y
         weatherCenter = weatherLabel.center.y
@@ -73,8 +76,9 @@ class InfoViewController: UIViewController {
    }
 }
 
+// URL request logic
 extension InfoViewController{
-    
+    ///Load data from db, if not exist or expired, download from Internet
     func loadWeatherData(_ handler: @escaping () -> Void){
         let stack = delegate.stack
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Wdata")
@@ -102,7 +106,7 @@ extension InfoViewController{
             print("error in fetching")
             }
     }
-    
+    // Download data from internet
     func downloadData(_ handler: @escaping () -> Void){
         let stack = delegate.stack
         let name = self.city?.name!
@@ -121,16 +125,15 @@ extension InfoViewController{
                 self.parsedDict = dict as! [String : Any]
                 }
             }else{
-                self.alertWithError("Network Fail","Error")
+                self.alertWithError(error!,"Error")
                 performUIUpdatesOnMain {
                     self.activityIndicator.isHidden = true
                 }
             }
             handler()
     }
-        
 }
-    
+    //Figure map data from dict to view controls
     func configureForecast(_ forecast:[String:Any]){
         
         let simpleforecast = forecast["simpleforecast"] as! [String:Any]
@@ -170,19 +173,6 @@ extension InfoViewController{
             hourlyData.append(tempDict)
         }
     }
-    
-    func shouldUpdate(_ date:Date) -> Bool{
-        let current = Date()
-        let calendar = Calendar.current
-        
-        let currentHour = calendar.component(.hour, from: current)
-        let hour = calendar.component(.hour, from: date)
-        if currentHour != hour{
-            return true
-        }
-        return false
-    }
-    
     func configureCurrentCondition(_ dict : [String:Any]){
         cityName.text = city?.name
         todayLabel.text = "  \(tenDayForecast[7]["Weekday"]!)   Today"
@@ -214,6 +204,20 @@ extension InfoViewController{
         return result
     }
     
+    // Weather should the data update or not
+    func shouldUpdate(_ date:Date) -> Bool{
+        let current = Date()
+        let calendar = Calendar.current
+        
+        let currentHour = calendar.component(.hour, from: current)
+        let hour = calendar.component(.hour, from: date)
+        if currentHour != hour{
+            return true
+        }
+        return false
+    }
+    
+    // Set UI condition
     func configureUI(_ bool:Bool){
         if bool{
               self.tenDayForecast = []
@@ -235,7 +239,7 @@ extension InfoViewController{
         }
     
 }
-
+// Collection view content
 extension InfoViewController: UICollectionViewDataSource{
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
@@ -257,7 +261,7 @@ extension InfoViewController: UICollectionViewDataSource{
         return cell
     }
 }
-
+// tableview contents and delegate
 extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
     
     func scrollViewDidScroll(_ scrollView: UIScrollView){
