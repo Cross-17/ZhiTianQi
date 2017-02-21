@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import CoreLocation
 class InfoViewController: UIViewController {
     
     let height : CGFloat = 148.0
@@ -25,7 +26,8 @@ class InfoViewController: UIViewController {
     var currentDetail :[String:Any] = [:]
     var uiEnableFlag = false
     
-    
+    @IBOutlet weak var scrollUpdateLabel: UILabel!
+    @IBOutlet weak var scrollView: UIScrollView!
     @IBOutlet weak var stackView: UIStackView!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     @IBOutlet weak var tempScaleLabel: UILabel!
@@ -39,46 +41,42 @@ class InfoViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        DispatchQueue.main.async {
-            self.configureUI(false)
-            self.collectionView.reloadData()
-            self.tableView.reloadData()
-        }
-        let stack = delegate.stack
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
-        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
-        let results = try! stack?.context.fetch(fetchRequest)
-        city = results?[0] as! City?
-        guard city != nil else{
-            return
-        }
-        city?.lastViewedAt = NSDate()
+        scrollView.delegate = self
         cityCenter = cityName.center.y
         weatherCenter = weatherLabel.center.y
         tableView.separatorStyle = .none
-        self.loadWeatherData(){
-            let response =  self.parsedDict["response"] as! [String:Any]?
-            if response == nil || response?["error"] != nil {
-                let name = self.city?.name
-                self.alertWithError("Could not find data with \(name!)","Error")
-                stack?.context.delete(self.city!)
-                performUIUpdatesOnMain {
-                    self.activityIndicator.isHidden = true
-                }
+        update()
+   }
+    @IBAction func getLocationWeather(_ sender: Any) {
+        let locationManager = CLLocationManager()
+        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        locationManager.requestAlwaysAuthorization()
+        locationManager.startUpdatingLocation()
+        let geo = CLGeocoder()
+        let coor = locationManager.location?.coordinate
+        geo.reverseGeocodeLocation(locationManager.location!){ (city,error) in
+            if let city = city{
+            let name = city[0].name
+            let stack = self.delegate.stack
+            self.city = City(name!,(stack?.context)!)
+            let lat = coor?.latitude
+            let lon = coor?.longitude
+            self.city?.location = "\(lat!),\(lon!)"
+            self.city?.lastViewedAt = NSDate()
+            self.update()
             }else{
-            DispatchQueue.main.async {
-            self.configureUI(true)
-            self.collectionView.reloadData()
-            self.tableView.reloadData()
+                self.alertWithError("Could not find city in your location", "Error")
+                self.configureUI(false)
             }
         }
-      }
-   }
+        
+        
+    }
+    
 }
 
-// URL request logic
 extension InfoViewController{
-    ///Load data from db, if not exist or expired, download from Internet
+    
     func loadWeatherData(_ handler: @escaping () -> Void){
         let stack = delegate.stack
         let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "Wdata")
@@ -106,7 +104,7 @@ extension InfoViewController{
             print("error in fetching")
             }
     }
-    // Download data from internet
+    
     func downloadData(_ handler: @escaping () -> Void){
         let stack = delegate.stack
         let name = self.city?.name!
@@ -125,15 +123,15 @@ extension InfoViewController{
                 self.parsedDict = dict as! [String : Any]
                 }
             }else{
-                self.alertWithError(error!,"Error")
-                performUIUpdatesOnMain {
-                    self.activityIndicator.isHidden = true
-                }
+                self.alertWithError("Network fail","Error")
+                self.configureUI(false)
+             
             }
             handler()
     }
+        
 }
-    //Figure map data from dict to view controls
+    
     func configureForecast(_ forecast:[String:Any]){
         
         let simpleforecast = forecast["simpleforecast"] as! [String:Any]
@@ -173,6 +171,19 @@ extension InfoViewController{
             hourlyData.append(tempDict)
         }
     }
+    
+    func shouldUpdate(_ date:Date) -> Bool{
+        let current = Date()
+        let calendar = Calendar.current
+        
+        let currentHour = calendar.component(.hour, from: current)
+        let hour = calendar.component(.hour, from: date)
+        if currentHour != hour{
+            return true
+        }
+        return false
+    }
+    
     func configureCurrentCondition(_ dict : [String:Any]){
         cityName.text = city?.name
         todayLabel.text = "  \(tenDayForecast[7]["Weekday"]!)   Today"
@@ -204,20 +215,6 @@ extension InfoViewController{
         return result
     }
     
-    // Weather should the data update or not
-    func shouldUpdate(_ date:Date) -> Bool{
-        let current = Date()
-        let calendar = Calendar.current
-        
-        let currentHour = calendar.component(.hour, from: current)
-        let hour = calendar.component(.hour, from: date)
-        if currentHour != hour{
-            return true
-        }
-        return false
-    }
-    
-    // Set UI condition
     func configureUI(_ bool:Bool){
         if bool{
               self.tenDayForecast = []
@@ -225,7 +222,9 @@ extension InfoViewController{
               self.configureForecast(self.parsedDict["forecast"] as! [String : Any])
               self.configureHourly(self.parsedDict["hourly_forecast"] as! [[String : Any]])
               self.configureCurrentCondition(self.parsedDict)
-              self.activityIndicator.stopAnimating()
+            performUIUpdatesOnMain {
+                self.activityIndicator.stopAnimating()
+            }
               self.uiEnableFlag = true
         }else{
             self.uiEnableFlag = false
@@ -234,12 +233,51 @@ extension InfoViewController{
             self.tempScaleLabel.text = ""
             self.tempLabel.text = "_ _"
             self.weatherLabel.text = ""
-            self.activityIndicator.startAnimating()
+            performUIUpdatesOnMain {
+                self.activityIndicator.startAnimating()
+            }
         }
+    }
+    
+    func update(_ notCheckDB: Bool = false){
+        DispatchQueue.main.async {
+            self.configureUI(false)
+            self.collectionView.reloadData()
+            self.tableView.reloadData()
         }
+        let stack = delegate.stack
+        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
+        fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
+        let results = try! stack?.context.fetch(fetchRequest)
+        guard results?.count != 0  else{
+            self.getLocationWeather(self.activityIndicator)
+            return
+        }
+        city = results?[0] as! City?
+        city?.lastViewedAt = NSDate()
+        let handler = {
+            let response =  self.parsedDict["response"] as! [String:Any]?
+            if response == nil || response?["error"] != nil {
+                let name = self.city?.name
+                self.alertWithError("Could not find data with \(name!)","Error")
+                stack?.context.delete(self.city!)
+            }else{
+                DispatchQueue.main.async {
+                    self.configureUI(true)
+                    self.collectionView.reloadData()
+                    self.tableView.reloadData()
+                }
+            }
+        }
+        if notCheckDB{
+            downloadData(handler)
+        }else{
+            loadWeatherData(handler)
+        }
+    }
     
 }
-// Collection view content
+
 extension InfoViewController: UICollectionViewDataSource{
     
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int
@@ -253,6 +291,7 @@ extension InfoViewController: UICollectionViewDataSource{
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell
     {
+        
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionCell", for: indexPath) as! CollectionCell
         let hour = hourlyData[indexPath.item]
         cell.textLabel1.text = hour["Hour"] as! String?
@@ -261,10 +300,11 @@ extension InfoViewController: UICollectionViewDataSource{
         return cell
     }
 }
-// tableview contents and delegate
+
 extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
     
     func scrollViewDidScroll(_ scrollView: UIScrollView){
+        if scrollView == self.tableView{
         currentView.constraints[0].constant = height - scrollView.contentOffset.y
         let currentHeight = currentView.constraints[0].constant
         if currentHeight >= 0{
@@ -277,7 +317,23 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
             todayLabel.alpha = alpha
             tempScaleLabel.alpha = alpha
         }
+        }else{
+            if scrollView.contentOffset.y < -150.0{
+                scrollUpdateLabel.text = "Release to update"
+            }
+            else{
+                scrollUpdateLabel.text = "Scroll down to update"
+            }
+        }
         
+    }
+    
+    func scrollViewDidEndDragging(_ scrollView: UIScrollView, willDecelerate decelerate: Bool) {
+        if scrollView == self.scrollView{
+            if scrollView.contentOffset.y < -150.0{
+                 update(true)
+            }
+        }
     }
     
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
@@ -329,3 +385,8 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
     }
 }
 
+//extension InfoViewController : CLLocationManagerDelegate{
+//    func locationManager(manager:CLLocationManager, didUpdateLocations locations:[AnyObject]) {
+//        print("locations = \(locations)")
+//    }
+//}

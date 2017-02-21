@@ -15,13 +15,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     let stack = CoreDataStack(modelName: "Model")
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-        // make sure we always have City object while this app running
-        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
-        if try! stack?.context.count(for: fetchRequest) == 0{
-        for item in city.data{
-            let _ = City(item,(stack?.context)!)
-        }
-        }
+//        try! stack?.dropAllData()
+//        stack?.context.reset()
+//        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
+//        if try! stack?.context.count(for: fetchRequest) == 0{
+//        for item in city.data{
+//            let _ = City(item,(stack?.context)!)
+//        }
+//        }
         return true
     }
 }

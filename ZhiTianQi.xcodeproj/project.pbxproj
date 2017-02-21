@@ -24,6 +24,7 @@
 		602DBEAD1E4B6C3000D3655D /* City+CoreDataClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = 602DBEA91E4B6C3000D3655D /* City+CoreDataClass.swift */; };
 		602DBEAE1E4B6C3000D3655D /* City+CoreDataProperties.swift in Sources */ = {isa = PBXBuildFile; fileRef = 602DBEAA1E4B6C3000D3655D /* City+CoreDataProperties.swift */; };
 		602DBEB21E4C634800D3655D /* CoreDataStack.swift in Sources */ = {isa = PBXBuildFile; fileRef = 602DBEB11E4C634800D3655D /* CoreDataStack.swift */; };
+		60AEBC981E5C38E300892EAE /* SearchResultViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 60AEBC971E5C38E300892EAE /* SearchResultViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -46,6 +47,7 @@
 		602DBEA91E4B6C3000D3655D /* City+CoreDataClass.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "City+CoreDataClass.swift"; path = "../City+CoreDataClass.swift"; sourceTree = "<group>"; };
 		602DBEAA1E4B6C3000D3655D /* City+CoreDataProperties.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = "City+CoreDataProperties.swift"; path = "../City+CoreDataProperties.swift"; sourceTree = "<group>"; };
 		602DBEB11E4C634800D3655D /* CoreDataStack.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = CoreDataStack.swift; sourceTree = "<group>"; };
+		60AEBC971E5C38E300892EAE /* SearchResultViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = SearchResultViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +66,7 @@
 			children = (
 				602DBE8C1E4A385100D3655D /* SearchTableViewController.swift */,
 				602DBEA21E4B1A7700D3655D /* InfoViewController.swift */,
+				60AEBC971E5C38E300892EAE /* SearchResultViewController.swift */,
 			);
 			name = Controller;
 			sourceTree = "<group>";
@@ -73,6 +76,7 @@
 			children = (
 				602DBEA61E4B68C200D3655D /* Model.xcdatamodeld */,
 				602DBEA01E4B0EF300D3655D /* City.swift */,
+				602DBE9E1E4A516800D3655D /* GCDBlackBox.swift */,
 				602DBEB11E4C634800D3655D /* CoreDataStack.swift */,
 				602ADE451E51CEC000521C47 /* Wdata+CoreDataProperties.swift */,
 				602DBEA91E4B6C3000D3655D /* City+CoreDataClass.swift */,
@@ -113,7 +117,6 @@
 			children = (
 				602DBE8A1E4A385100D3655D /* AppDelegate.swift */,
 				602DBE8E1E4A385100D3655D /* Main.storyboard */,
-				602DBE9E1E4A516800D3655D /* GCDBlackBox.swift */,
 				602DBE911E4A385100D3655D /* Assets.xcassets */,
 				602DBE931E4A385100D3655D /* LaunchScreen.storyboard */,
 				602DBE961E4A385100D3655D /* Info.plist */,
@@ -207,6 +210,7 @@
 				602ADE461E51CEC000521C47 /* Wdata+CoreDataClass.swift in Sources */,
 				602DBEB21E4C634800D3655D /* CoreDataStack.swift in Sources */,
 				602DBEA81E4B68C200D3655D /* Model.xcdatamodeld in Sources */,
+				60AEBC981E5C38E300892EAE /* SearchResultViewController.swift in Sources */,
 				602DBE8B1E4A385100D3655D /* AppDelegate.swift in Sources */,
 				602DBEA51E4B51CE00D3655D /* CollectionCell.swift in Sources */,
 				602DBEA31E4B1A7700D3655D /* InfoViewController.swift in Sources */,

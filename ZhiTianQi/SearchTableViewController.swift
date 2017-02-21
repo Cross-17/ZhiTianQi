@@ -12,12 +12,24 @@ import CoreLocation
 class SearchTableViewController: UITableViewController {
     let client = WeatherClient.shared
     let delegate = UIApplication.shared.delegate as! AppDelegate
-    
+    var searchController : UISearchController! = nil
+    var resultController: SearchResultViewController! = nil
+    @IBOutlet var ResultTable: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
-    
     override func viewDidLoad() {
         super.viewDidLoad()
-        searchBar.delegate = self
+//        searchBar.delegate = self
+        
+        resultController = SearchResultViewController()
+        resultController.tableView.delegate = self
+        resultController.tableView.delegate = self
+        searchController = UISearchController(searchResultsController:resultController)
+        searchController.searchResultsUpdater = self
+        searchController.dimsBackgroundDuringPresentation = true
+        searchController.delegate = self
+        searchController.searchBar.delegate = self
+        definesPresentationContext = true
+        self.view.addSubview(searchController.searchBar)
         let stack = delegate.stack
         let fr = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
         fr.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
@@ -59,7 +71,11 @@ extension SearchTableViewController{
         }
     }
     
+    
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        if tableView == self.searchController.searchResultsController{
+            return 0
+        }
         if let fc = fetchedResultsController {
             return fc.sections![section].numberOfObjects
         } else {
@@ -75,11 +91,18 @@ extension SearchTableViewController{
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        print("selected")
+        if tableView == self.tableView {
        let city = fetchedResultsController?.object(at: indexPath) as! City
        city.lastViewedAt = NSDate()
        delegate.stack?.save()
-       navigationController?.popToRootViewController(animated: true)
-    }
+        }else{
+            let cit = City(city.filtered[indexPath.item],(delegate.stack?.context)!)
+            cit.lastViewedAt = NSDate()
+            delegate.stack?.save()
+        }
+          let _ = navigationController?.popToRootViewController(animated: true)
+   }
 }
 
 extension SearchTableViewController: NSFetchedResultsControllerDelegate {
@@ -122,13 +145,63 @@ extension SearchTableViewController: NSFetchedResultsControllerDelegate {
 }
 
 extension SearchTableViewController: UISearchBarDelegate{
+//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
+//        print("pressed")
+//        let geo = CLGeocoder()
+//        
+//        geo.geocodeAddressString(searchBar.text!){ (result,error) in
+//            if  let error = error{
+//                if error.localizedDescription.contains("8"){
+//                    self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
+//                }else{
+//                    self.alertWithError("Network Fail", "ERROR")
+//                }
+//            }else{
+//                let coor = result![0].location?.coordinate
+//                let city = City(searchBar.text!,(self.delegate.stack?.context)!)
+//                let lat = coor?.latitude
+//                let lon = coor?.longitude
+//                city.location = "\(lat!),\(lon!)"
+//                city.lastViewedAt = NSDate()
+//                let _ = self.navigationController?.popToRootViewController(animated: true)
+//            }
+//         }
+//     }
+
+}
+
+extension UIViewController{
+    func alertWithError(_ error: String,_ title: String) {
+        let alertView = UIAlertController(title: title, message: error, preferredStyle: .alert)
+        alertView.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
+        self.present(alertView, animated: true, completion: nil)
+    }
+}
+
+extension SearchTableViewController: UISearchResultsUpdating,UISearchControllerDelegate{
+    func updateSearchResults(for searchController: UISearchController) {
+        city.searchString = searchController.searchBar.text!
+        print(city.searchString)
+        searchController.searchResultsController?.viewWillAppear(true)
+    }
+    func willPresentSearchController(_ searchController: UISearchController) {
+        performUIUpdatesOnMain {
+            searchController.searchResultsController?.view.isHidden = false
+        }
+    }
+    
+    func didPresentSearchController(_ searchController: UISearchController) {
+        searchController.searchResultsController?.view.isHidden = false
+    }
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        
+        print("pressed")
+        print(self)
         let geo = CLGeocoder()
+        self.searchController.searchResultsController?.dismiss(animated: true, completion: nil)
         geo.geocodeAddressString(searchBar.text!){ (result,error) in
             if  let error = error{
                 if error.localizedDescription.contains("8"){
-                self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
+                    self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
                 }else{
                     self.alertWithError("Network Fail", "ERROR")
                 }
@@ -139,17 +212,9 @@ extension SearchTableViewController: UISearchBarDelegate{
                 let lon = coor?.longitude
                 city.location = "\(lat!),\(lon!)"
                 city.lastViewedAt = NSDate()
-                self.navigationController?.popToRootViewController(animated: true)
+                let _ = self.navigationController?.popToRootViewController(animated: true)
             }
-    }
-}
-}
-
-extension UIViewController{
-    func alertWithError(_ error: String,_ title: String) {
-        let alertView = UIAlertController(title: title, message: error, preferredStyle: .alert)
-        alertView.addAction(UIAlertAction(title: "OK", style: .cancel, handler: nil))
-        self.present(alertView, animated: true, completion: nil)
+        }
     }
 }
 
