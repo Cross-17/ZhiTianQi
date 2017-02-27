@@ -7,7 +7,7 @@
 //
 
 import Foundation
-struct city{
+struct CityData{
     static var data:[String] = ["Beijing","Tianjing","Shanghai","Chongqing","Shenyang","Dalian","Changchun","Harbin","Zhengzhou","Wuhan","Changsha","Guangzhou","Shenzhen","Nanjing"]
     static var searchString = ""
     static var filtered: [String] = []

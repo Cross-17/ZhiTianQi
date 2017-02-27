@@ -16,27 +16,21 @@ class SearchResultViewController: UITableViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
-        city.filtered = filter()
+        CityData.filtered = filter()
         performUIUpdatesOnMain {
             self.tableView.reloadData()
         }
     }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return city.filtered.count
+        return CityData.filtered.count
 
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SearchResultCell", for: indexPath)
-        cell.textLabel?.text = city.filtered[indexPath.item]
+        cell.textLabel?.text = CityData.filtered[indexPath.item]
         return cell
     }
     func filter() -> [String]{
-       return city.data.filter(){$0.contains(city.searchString)}
+       return CityData.data.filter(){$0.contains(CityData.searchString)}
     }
-    
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
- 
-
 }

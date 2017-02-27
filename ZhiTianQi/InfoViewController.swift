@@ -384,9 +384,3 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
         }
     }
 }
-
-//extension InfoViewController : CLLocationManagerDelegate{
-//    func locationManager(manager:CLLocationManager, didUpdateLocations locations:[AnyObject]) {
-//        print("locations = \(locations)")
-//    }
-//}

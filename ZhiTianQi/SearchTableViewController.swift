@@ -18,10 +18,7 @@ class SearchTableViewController: UITableViewController {
     @IBOutlet weak var searchBar: UISearchBar!
     override func viewDidLoad() {
         super.viewDidLoad()
-//        searchBar.delegate = self
-        
         resultController = SearchResultViewController()
-        resultController.tableView.delegate = self
         resultController.tableView.delegate = self
         searchController = UISearchController(searchResultsController:resultController)
         searchController.searchResultsUpdater = self
@@ -97,7 +94,7 @@ extension SearchTableViewController{
        city.lastViewedAt = NSDate()
        delegate.stack?.save()
         }else{
-            let cit = City(city.filtered[indexPath.item],(delegate.stack?.context)!)
+            let cit = City(CityData.filtered[indexPath.item],(delegate.stack?.context)!)
             cit.lastViewedAt = NSDate()
             delegate.stack?.save()
         }
@@ -180,8 +177,8 @@ extension UIViewController{
 
 extension SearchTableViewController: UISearchResultsUpdating,UISearchControllerDelegate{
     func updateSearchResults(for searchController: UISearchController) {
-        city.searchString = searchController.searchBar.text!
-        print(city.searchString)
+        CityData.searchString = searchController.searchBar.text!
+        print(CityData.searchString)
         searchController.searchResultsController?.viewWillAppear(true)
     }
     func willPresentSearchController(_ searchController: UISearchController) {
@@ -212,7 +209,9 @@ extension SearchTableViewController: UISearchResultsUpdating,UISearchControllerD
                 let lon = coor?.longitude
                 city.location = "\(lat!),\(lon!)"
                 city.lastViewedAt = NSDate()
-                let _ = self.navigationController?.popToRootViewController(animated: true)
+                performUIUpdatesOnMain {
+                    let _ = self.navigationController?.popToRootViewController(animated: true)
+                }
             }
         }
     }
