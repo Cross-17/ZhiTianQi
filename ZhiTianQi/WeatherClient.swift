@@ -7,21 +7,39 @@
 //
 
 import Foundation
+import CoreLocation
 class WeatherClient {
     
     // shared session
     var session = URLSession.shared
     let key = "07efc3b0e455ddeb"
     let apiKey = "113cae959b360a77cae56537dc57c4ae"
+    let base = "api.wunderground.com/api/07efc3b0e455ddeb/forecast10day/conditions/astronomy/hourly"
     
     func queryWithCityName(_ name:String, completionHandler:@escaping (_ result: AnyObject?, _ error: String?) -> Void){
-        let base = "api.wunderground.com/api/07efc3b0e455ddeb/forecast10day/conditions/astronomy/hourly"
-        let query = "q/\(name).json"
-        let url = "https://\(base)/\(query)"
-        requestWithURL(url,completionHandler)
+        let geo = CLGeocoder()
+        var searchString = ""
+        geo.geocodeAddressString(name){ (result,error) in
+            if  let error = error{
+                if error.localizedDescription.contains("8"){
+                    completionHandler(nil,"Could not find city \(name)")
+                }else{
+                    completionHandler(nil,"Network Fail")
+                }
+            }else{
+                let coor = result![0].location?.coordinate
+                let lat = coor?.latitude
+                let lon = coor?.longitude
+                searchString = "\(lat!),\(lon!)"
+            }
+        let query = "q/\(searchString).json"
+        let url = "https://\(self.base)/\(query)"
+        self.requestWithURL(url,completionHandler)
+    }
     }
     
     private func requestWithURL(_ url:String,_ completionHandler:@escaping (_ result: AnyObject?, _ error: String?) -> Void){
+        print(url);
         let request = URLRequest(url: NSURL(string:url) as! URL)
         let task = session.dataTask(with: request){ data, response, error in
             

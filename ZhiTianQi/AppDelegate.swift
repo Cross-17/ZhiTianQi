@@ -8,21 +8,24 @@
 
 import UIKit
 import CoreData
+import CoreLocation
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
-
+    let locationManager  = CLLocationManager()
     let stack = CoreDataStack(modelName: "Model")
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
-//        try! stack?.dropAllData()
-//        stack?.context.reset()
-//        let fetchRequest = NSFetchRequest<NSFetchRequestResult>(entityName: "City")
-//        if try! stack?.context.count(for: fetchRequest) == 0{
-//        for item in city.data{
-//            let _ = City(item,(stack?.context)!)
-//        }
-//        }
+        locationManager.requestAlwaysAuthorization()
+        DispatchQueue.init(label: "background").async {
+        for item in CityData.rawdata{
+            var data = CityForSearch()
+            data.name = item
+            data.matchString.append(item)
+            data.matchString.append(transformToPinYin(item))
+            CityData.formatedData.append(data)
+        }
+    }
         return true
     }
 }

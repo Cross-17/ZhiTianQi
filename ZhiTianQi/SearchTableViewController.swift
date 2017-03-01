@@ -16,6 +16,7 @@ class SearchTableViewController: UITableViewController {
     var resultController: SearchResultViewController! = nil
     @IBOutlet var ResultTable: UITableView!
     @IBOutlet weak var searchBar: UISearchBar!
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         resultController = SearchResultViewController()
@@ -24,7 +25,6 @@ class SearchTableViewController: UITableViewController {
         searchController.searchResultsUpdater = self
         searchController.dimsBackgroundDuringPresentation = true
         searchController.delegate = self
-        searchController.searchBar.delegate = self
         definesPresentationContext = true
         self.view.addSubview(searchController.searchBar)
         let stack = delegate.stack
@@ -57,7 +57,7 @@ extension SearchTableViewController {
     }
 }
 
-
+//MARK: - Tableview delegate logic
 extension SearchTableViewController{
     
     override func numberOfSections(in tableView: UITableView) -> Int {
@@ -88,20 +88,17 @@ extension SearchTableViewController{
     }
     
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        print("selected")
-        if tableView == self.tableView {
+    if tableView == self.tableView {
        let city = fetchedResultsController?.object(at: indexPath) as! City
        city.lastViewedAt = NSDate()
        delegate.stack?.save()
         }else{
-            let cit = City(CityData.filtered[indexPath.item],(delegate.stack?.context)!)
-            cit.lastViewedAt = NSDate()
-            delegate.stack?.save()
+            handleCity(CityData.filtered[indexPath.item].name,(delegate.stack)!)
         }
           let _ = navigationController?.popToRootViewController(animated: true)
    }
 }
-
+// MARK: - FetchedResultsController logic, batch insert/delete/update
 extension SearchTableViewController: NSFetchedResultsControllerDelegate {
     
     func controllerWillChangeContent(_ controller: NSFetchedResultsController<NSFetchRequestResult>) {
@@ -140,33 +137,7 @@ extension SearchTableViewController: NSFetchedResultsControllerDelegate {
         tableView.endUpdates()
     }
 }
-
-extension SearchTableViewController: UISearchBarDelegate{
-//    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-//        print("pressed")
-//        let geo = CLGeocoder()
-//        
-//        geo.geocodeAddressString(searchBar.text!){ (result,error) in
-//            if  let error = error{
-//                if error.localizedDescription.contains("8"){
-//                    self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
-//                }else{
-//                    self.alertWithError("Network Fail", "ERROR")
-//                }
-//            }else{
-//                let coor = result![0].location?.coordinate
-//                let city = City(searchBar.text!,(self.delegate.stack?.context)!)
-//                let lat = coor?.latitude
-//                let lon = coor?.longitude
-//                city.location = "\(lat!),\(lon!)"
-//                city.lastViewedAt = NSDate()
-//                let _ = self.navigationController?.popToRootViewController(animated: true)
-//            }
-//         }
-//     }
-
-}
-
+//MARK: - Alert view
 extension UIViewController{
     func alertWithError(_ error: String,_ title: String) {
         let alertView = UIAlertController(title: title, message: error, preferredStyle: .alert)
@@ -175,45 +146,12 @@ extension UIViewController{
     }
 }
 
+//MARK: - Searchview controller
 extension SearchTableViewController: UISearchResultsUpdating,UISearchControllerDelegate{
+    // updating CityData.searchString when the searchbar text changes.
     func updateSearchResults(for searchController: UISearchController) {
         CityData.searchString = searchController.searchBar.text!
-        print(CityData.searchString)
         searchController.searchResultsController?.viewWillAppear(true)
-    }
-    func willPresentSearchController(_ searchController: UISearchController) {
-        performUIUpdatesOnMain {
-            searchController.searchResultsController?.view.isHidden = false
-        }
-    }
-    
-    func didPresentSearchController(_ searchController: UISearchController) {
-        searchController.searchResultsController?.view.isHidden = false
-    }
-    func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
-        print("pressed")
-        print(self)
-        let geo = CLGeocoder()
-        self.searchController.searchResultsController?.dismiss(animated: true, completion: nil)
-        geo.geocodeAddressString(searchBar.text!){ (result,error) in
-            if  let error = error{
-                if error.localizedDescription.contains("8"){
-                    self.alertWithError("Could not find city \(searchBar.text!)", "ERROR")
-                }else{
-                    self.alertWithError("Network Fail", "ERROR")
-                }
-            }else{
-                let coor = result![0].location?.coordinate
-                let city = City(searchBar.text!,(self.delegate.stack?.context)!)
-                let lat = coor?.latitude
-                let lon = coor?.longitude
-                city.location = "\(lat!),\(lon!)"
-                city.lastViewedAt = NSDate()
-                performUIUpdatesOnMain {
-                    let _ = self.navigationController?.popToRootViewController(animated: true)
-                }
-            }
-        }
     }
 }
 

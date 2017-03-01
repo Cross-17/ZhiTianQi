@@ -16,6 +16,7 @@ class SearchResultViewController: UITableViewController {
     }
     
     override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(true)
         CityData.filtered = filter()
         performUIUpdatesOnMain {
             self.tableView.reloadData()
@@ -23,14 +24,24 @@ class SearchResultViewController: UITableViewController {
     }
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return CityData.filtered.count
-
     }
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SearchResultCell", for: indexPath)
-        cell.textLabel?.text = CityData.filtered[indexPath.item]
+        cell.textLabel?.text = CityData.filtered[indexPath.item].name
         return cell
     }
-    func filter() -> [String]{
-       return CityData.data.filter(){$0.contains(CityData.searchString)}
+    
+    // update CityData.filtered array based on its search string
+    func filter() -> [CityForSearch]{
+        let searchString = CityData.searchString.lowercased()
+        return CityData.formatedData.filter(){ s in
+        for item in s.matchString{
+            if item.contains(searchString){
+                return true
+            }
+        }
+        return false;
+        }
     }
+    
 }
