@@ -69,7 +69,7 @@ class InfoViewController: UIViewController {
         }
         
         }else{
-            self.alertWithError("Could not locate", "error")
+            self.alertWithError("Could not locate", "Error")
         }
         locationManager?.stopUpdatingLocation()
     }
@@ -252,6 +252,9 @@ extension InfoViewController{
         let results = try! stack?.context.fetch(fetchRequest)
         guard results?.count != 0  else{
             self.getLocationWeather(self.activityIndicator)
+            for item in CityData.commonCity{
+                let _ = City(item,(stack?.context)!)
+            }
             return
         }
         city = results?[0] as! City?

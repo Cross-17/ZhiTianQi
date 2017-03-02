@@ -97,6 +97,13 @@ extension SearchTableViewController{
         }
           let _ = navigationController?.popToRootViewController(animated: true)
    }
+    override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
+        if editingStyle == .delete{
+            let city = fetchedResultsController?.object(at: indexPath) as! City
+            delegate.stack?.context.delete(city)
+            delegate.stack?.save()
+        }
+    }
 }
 // MARK: - FetchedResultsController logic, batch insert/delete/update
 extension SearchTableViewController: NSFetchedResultsControllerDelegate {

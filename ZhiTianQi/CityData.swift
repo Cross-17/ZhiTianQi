@@ -16,5 +16,6 @@ struct CityData{
     static var formatedData: [CityForSearch] = []
     static var searchString = ""
     static var filtered: [CityForSearch] = []
+    static var commonCity = ["北京市" ,"上海市" ,"广州市" ,"深圳市"]
 }
 
