@@ -239,6 +239,7 @@ extension InfoViewController{
             }
         }
     }
+    
 // MARK: - whole update process
     func update(_ notCheckDB: Bool = false){
         DispatchQueue.main.async {
@@ -251,7 +252,12 @@ extension InfoViewController{
         fetchRequest.sortDescriptors = [NSSortDescriptor(key: "lastViewedAt", ascending: false)]
         let results = try! stack?.context.fetch(fetchRequest)
         guard results?.count != 0  else{
-            self.getLocationWeather(self.activityIndicator)
+            locationManager?.delegate = self
+            if CLLocationManager.authorizationStatus().rawValue == 3{
+                self.getLocationWeather(self.activityIndicator)
+            }else{
+                locationManager?.requestAlwaysAuthorization()
+            }
             for item in CityData.commonCity{
                 let _ = City(item,(stack?.context)!)
             }
@@ -384,6 +390,14 @@ extension InfoViewController: UITableViewDelegate,UITableViewDataSource{
         }else
         {
         return 3
+        }
+    }
+}
+
+extension InfoViewController : CLLocationManagerDelegate{
+    func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
+        if status.rawValue == 3{
+            getLocationWeather(activityIndicator)
         }
     }
 }

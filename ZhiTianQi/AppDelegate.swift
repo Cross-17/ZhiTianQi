@@ -18,14 +18,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         locationManager.requestAlwaysAuthorization()
         DispatchQueue.init(label: "background").async {
-        for item in CityData.rawdata{
-            var data = CityForSearch()
-            data.name = item
-            data.matchString.append(item)
-            data.matchString.append(transformToPinYin(item))
-            CityData.formatedData.append(data)
+            for item in CityData.rawdata{
+                var data = CityForSearch()
+                data.name = item
+                data.matchString.append(item)
+                data.matchString.append(transformToPinYin(item))
+                CityData.formatedData.append(data)
+            }
         }
-    }
         return true
     }
 }
